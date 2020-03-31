@@ -1,15 +1,31 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
-const debug = require('debug')('meta-yarn-run');
-const metaLoop = require('meta-loop');
+const program = require('commander');
+const debug = require('debug')('meta-yarn-install');
+const getMetaFile = require('get-meta-file');
+const loop = require('loop');
+const path = require('path');
+const util = require('util');
 
 const usage = `\n  usage:\n\n    meta yarn run <command>\n`;
 
-if (!process.argv[2] || process.argv[2] === '--help') return console.log(usage);
+if (process.argv[2] === '--help') {
+  return console.log(usage);
+}
+
 
 const command = process.argv[2] === 'blank' ? process.argv[3] : process.argv[2];
-
+debug(command)
 if (!command) return console.log(usage);
 
-metaLoop(`yarn run ${command}`);
+const meta = getMetaFile();
+const projects = meta.projects;
+const folders = Object.keys(projects).map((folder) => { return path.resolve(folder); });
+
+folders.unshift(process.cwd());
+
+loop({
+  command: `yarn run ${command}`,
+  directories: folders
+});
